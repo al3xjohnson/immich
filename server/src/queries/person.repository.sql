@@ -24,8 +24,8 @@ limit
   3
 
 -- PersonRepository.getAllForUser
-select
-  "person".*
+select distinct
+  on ("person"."groupId") "person".*
 from
   "person"
   inner join "asset_face" on "asset_face"."personId" = "person"."id"
@@ -33,18 +33,49 @@ from
   and "asset"."visibility" = 'timeline'
   and "asset"."deletedAt" is null
 where
-  "person"."ownerId" = $1
+  (
+    "person"."ownerId" = $1
+    or (
+      exists (
+        select
+        from
+          "partner"
+        where
+          "partner"."sharedById" = "person"."ownerId"
+          and "partner"."sharedWithId" = $2
+          and "partner"."permissions" @> $3
+      )
+      or exists (
+        select
+        from
+          "album_user"
+        where
+          "album_user"."albumId" in (
+            select
+              "album_user"."albumId"
+            from
+              "album_user"
+            where
+              "album_user"."userId" = $4
+          )
+          and "album_user"."userId" = "person"."ownerId"
+          and "album_user"."permissions" @> $5
+      )
+    )
+  )
   and "asset_face"."deletedAt" is null
   and "asset_face"."isVisible" is true
-  and "person"."isHidden" = $2
+  and "person"."isHidden" = $6
 group by
   "person"."id"
 having
   (
-    "person"."name" != $3
-    or count("asset_face"."assetId") >= $4
+    "person"."name" != $7
+    or count("asset_face"."assetId") >= $8
   )
 order by
+  "person"."groupId",
+  "person"."ownerId" = $9 desc,
   "person"."isHidden" asc,
   "person"."isFavorite" desc,
   NULLIF(person.name, '') is null asc,
@@ -52,9 +83,9 @@ order by
   NULLIF(person.name, '') asc nulls last,
   "person"."createdAt"
 limit
-  $5
+  $10
 offset
-  $6
+  $11
 
 -- PersonRepository.getAllWithoutFaces
 select
@@ -234,9 +265,39 @@ from
   and "asset"."visibility" = 'timeline'
   and "asset"."deletedAt" is null
 where
-  "asset_face"."deletedAt" is null
+  (
+    "asset"."ownerId" = $1
+    or exists (
+      select
+      from
+        "partner"
+      where
+        "partner"."sharedById" = "asset"."ownerId"
+        and "partner"."sharedWithId" = $2
+        and "partner"."permissions" @> $3
+    )
+    or exists (
+      select
+      from
+        "album_asset"
+        inner join "album_user" on "album_user"."albumId" = "album_asset"."albumId"
+        and "album_user"."userId" = $4
+      where
+        "album_asset"."assetId" = "asset"."id"
+        and "album_user"."albumId" in (
+          select
+            "album_user"."albumId"
+          from
+            "album_user"
+          where
+            "album_user"."userId" = "asset"."ownerId"
+            and "album_user"."permissions" @> $5
+        )
+    )
+  )
+  and "asset_face"."deletedAt" is null
   and "asset_face"."isVisible" is true
-  and "asset_face"."personId" = $1
+  and "asset_face"."personId" = $6
 
 -- PersonRepository.getNumberOfPeople
 select
@@ -269,7 +330,36 @@ where
           and "asset"."deletedAt" is null
       )
   )
-  and "person"."ownerId" = $3
+  and (
+    "person"."ownerId" = $3
+    or (
+      exists (
+        select
+        from
+          "partner"
+        where
+          "partner"."sharedById" = "person"."ownerId"
+          and "partner"."sharedWithId" = $4
+          and "partner"."permissions" @> $5
+      )
+      or exists (
+        select
+        from
+          "album_user"
+        where
+          "album_user"."albumId" in (
+            select
+              "album_user"."albumId"
+            from
+              "album_user"
+            where
+              "album_user"."userId" = $6
+          )
+          and "album_user"."userId" = "person"."ownerId"
+          and "album_user"."permissions" @> $7
+      )
+    )
+  )
 
 -- PersonRepository.refreshFaces
 with
@@ -356,3 +446,33 @@ from
 where
   "asset_face"."assetId" = $2
   and "asset_face"."personId" = $3
+
+-- PersonRepository.mergeIntoGroup
+update "person"
+set
+  "groupId" = "p"."groupId"
+from
+  "person" as "p"
+where
+  "person"."groupId" in (
+    select
+      "person"."groupId"
+    from
+      "person"
+    where
+      "person"."id" = any ($1::uuid[])
+  )
+  and "p"."id" = $2
+
+-- PersonRepository.streamForPeopleMerge
+select
+  "asset"."ownerId",
+  "asset"."fileCreatedAt",
+  "asset_face"."personId",
+  "face_search"."embedding"
+from
+  "asset_face"
+  inner join "asset" on "asset"."id" = "asset_face"."assetId"
+  inner join "face_search" on "face_search"."faceId" = "asset_face"."id"
+where
+  "asset_face"."personId" is not null

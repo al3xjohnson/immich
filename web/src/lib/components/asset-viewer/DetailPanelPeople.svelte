@@ -13,11 +13,11 @@
 
   type Props = {
     asset: AssetResponseDto;
-    isOwner: boolean;
+    allowExifUpdate: boolean;
     previousRoute: string;
   };
 
-  const { asset, isOwner, previousRoute }: Props = $props();
+  const { asset, allowExifUpdate, previousRoute }: Props = $props();
 
   const unassignedFaces = $derived(asset.unassignedFaces || []);
   const people = $derived(asset.people || []);
@@ -56,7 +56,7 @@
   );
 </script>
 
-{#if !authManager.isSharedLink && isOwner}
+{#if !authManager.isSharedLink && allowExifUpdate}
   <section class="px-4 pt-4 text-sm">
     <div class="flex h-10 w-full items-center justify-between">
       <Text size="small" color="muted">{$t('people')}</Text>

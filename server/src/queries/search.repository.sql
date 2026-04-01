@@ -10,15 +10,46 @@ where
   "asset"."visibility" = $1
   and "asset"."fileCreatedAt" >= $2
   and "asset_exif"."lensModel" = $3
-  and "asset"."ownerId" = any ($4::uuid[])
-  and "asset"."isFavorite" = $5
+  and (
+    "asset"."ownerId" = $4
+    or exists (
+      select
+      from
+        "partner"
+      where
+        "partner"."sharedById" = "asset"."ownerId"
+        and "partner"."sharedWithId" = $5
+        and "partner"."permissions" @> $6
+        and "partner"."inTimeline" = $7
+    )
+    or exists (
+      select
+      from
+        "album_asset"
+        inner join "album_user" on "album_user"."albumId" = "album_asset"."albumId"
+        and "album_user"."userId" = $8
+      where
+        "album_asset"."assetId" = "asset"."id"
+        and "album_user"."inTimeline" = $9
+        and "album_user"."albumId" in (
+          select
+            "album_user"."albumId"
+          from
+            "album_user"
+          where
+            "album_user"."userId" = "asset"."ownerId"
+            and "album_user"."permissions" @> $10
+        )
+    )
+  )
+  and "asset"."isFavorite" = $11
   and "asset"."deletedAt" is null
 order by
   "asset"."fileCreatedAt" desc
 limit
-  $6
+  $12
 offset
-  $7
+  $13
 
 -- SearchRepository.searchStatistics
 select
@@ -30,8 +61,39 @@ where
   "asset"."visibility" = $1
   and "asset"."fileCreatedAt" >= $2
   and "asset_exif"."lensModel" = $3
-  and "asset"."ownerId" = any ($4::uuid[])
-  and "asset"."isFavorite" = $5
+  and (
+    "asset"."ownerId" = $4
+    or exists (
+      select
+      from
+        "partner"
+      where
+        "partner"."sharedById" = "asset"."ownerId"
+        and "partner"."sharedWithId" = $5
+        and "partner"."permissions" @> $6
+        and "partner"."inTimeline" = $7
+    )
+    or exists (
+      select
+      from
+        "album_asset"
+        inner join "album_user" on "album_user"."albumId" = "album_asset"."albumId"
+        and "album_user"."userId" = $8
+      where
+        "album_asset"."assetId" = "asset"."id"
+        and "album_user"."inTimeline" = $9
+        and "album_user"."albumId" in (
+          select
+            "album_user"."albumId"
+          from
+            "album_user"
+          where
+            "album_user"."userId" = "asset"."ownerId"
+            and "album_user"."permissions" @> $10
+        )
+    )
+  )
+  and "asset"."isFavorite" = $11
   and "asset"."deletedAt" is null
 
 -- SearchRepository.searchRandom
@@ -44,13 +106,44 @@ where
   "asset"."visibility" = $1
   and "asset"."fileCreatedAt" >= $2
   and "asset_exif"."lensModel" = $3
-  and "asset"."ownerId" = any ($4::uuid[])
-  and "asset"."isFavorite" = $5
+  and (
+    "asset"."ownerId" = $4
+    or exists (
+      select
+      from
+        "partner"
+      where
+        "partner"."sharedById" = "asset"."ownerId"
+        and "partner"."sharedWithId" = $5
+        and "partner"."permissions" @> $6
+        and "partner"."inTimeline" = $7
+    )
+    or exists (
+      select
+      from
+        "album_asset"
+        inner join "album_user" on "album_user"."albumId" = "album_asset"."albumId"
+        and "album_user"."userId" = $8
+      where
+        "album_asset"."assetId" = "asset"."id"
+        and "album_user"."inTimeline" = $9
+        and "album_user"."albumId" in (
+          select
+            "album_user"."albumId"
+          from
+            "album_user"
+          where
+            "album_user"."userId" = "asset"."ownerId"
+            and "album_user"."permissions" @> $10
+        )
+    )
+  )
+  and "asset"."isFavorite" = $11
   and "asset"."deletedAt" is null
 order by
   random()
 limit
-  $6
+  $12
 
 -- SearchRepository.searchLargeAssets
 select
@@ -63,14 +156,45 @@ where
   "asset"."visibility" = $1
   and "asset"."fileCreatedAt" >= $2
   and "asset_exif"."lensModel" = $3
-  and "asset"."ownerId" = any ($4::uuid[])
-  and "asset"."isFavorite" = $5
+  and (
+    "asset"."ownerId" = $4
+    or exists (
+      select
+      from
+        "partner"
+      where
+        "partner"."sharedById" = "asset"."ownerId"
+        and "partner"."sharedWithId" = $5
+        and "partner"."permissions" @> $6
+        and "partner"."inTimeline" = $7
+    )
+    or exists (
+      select
+      from
+        "album_asset"
+        inner join "album_user" on "album_user"."albumId" = "album_asset"."albumId"
+        and "album_user"."userId" = $8
+      where
+        "album_asset"."assetId" = "asset"."id"
+        and "album_user"."inTimeline" = $9
+        and "album_user"."albumId" in (
+          select
+            "album_user"."albumId"
+          from
+            "album_user"
+          where
+            "album_user"."userId" = "asset"."ownerId"
+            and "album_user"."permissions" @> $10
+        )
+    )
+  )
+  and "asset"."isFavorite" = $11
   and "asset"."deletedAt" is null
-  and "asset_exif"."fileSizeInByte" > $6
+  and "asset_exif"."fileSizeInByte" > $12
 order by
   "asset_exif"."fileSizeInByte" desc
 limit
-  $7
+  $13
 
 -- SearchRepository.searchSmart
 begin
@@ -86,15 +210,46 @@ where
   "asset"."visibility" = $1
   and "asset"."fileCreatedAt" >= $2
   and "asset_exif"."lensModel" = $3
-  and "asset"."ownerId" = any ($4::uuid[])
-  and "asset"."isFavorite" = $5
+  and (
+    "asset"."ownerId" = $4
+    or exists (
+      select
+      from
+        "partner"
+      where
+        "partner"."sharedById" = "asset"."ownerId"
+        and "partner"."sharedWithId" = $5
+        and "partner"."permissions" @> $6
+        and "partner"."inTimeline" = $7
+    )
+    or exists (
+      select
+      from
+        "album_asset"
+        inner join "album_user" on "album_user"."albumId" = "album_asset"."albumId"
+        and "album_user"."userId" = $8
+      where
+        "album_asset"."assetId" = "asset"."id"
+        and "album_user"."inTimeline" = $9
+        and "album_user"."albumId" in (
+          select
+            "album_user"."albumId"
+          from
+            "album_user"
+          where
+            "album_user"."userId" = "asset"."ownerId"
+            and "album_user"."permissions" @> $10
+        )
+    )
+  )
+  and "asset"."isFavorite" = $11
   and "asset"."deletedAt" is null
 order by
-  smart_search.embedding <=> $6
+  smart_search.embedding <=> $12
 limit
-  $7
+  $13
 offset
-  $8
+  $14
 commit
 
 -- SearchRepository.getEmbedding
