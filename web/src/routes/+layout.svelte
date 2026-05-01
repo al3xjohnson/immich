@@ -13,7 +13,7 @@
   import { serverConfigManager } from '$lib/managers/server-config-manager.svelte';
   import ServerRestartingModal from '$lib/modals/ServerRestartingModal.svelte';
   import { Route } from '$lib/route';
-  import { locale } from '$lib/stores/preferences.store';
+  import { lang, locale } from '$lib/stores/preferences.store';
   import { sidebarStore } from '$lib/stores/sidebar.svelte';
   import { closeWebsocketConnection, openWebsocketConnection, websocketStore } from '$lib/stores/websocket';
   import { maintenanceShouldRedirect } from '$lib/utils/maintenance';
@@ -35,6 +35,8 @@
     toastManager,
     TooltipProvider,
   } from '@immich/ui';
+  import { En } from 'media-chrome/lang/en';
+  import { addTranslation } from 'media-chrome/utils/i18n';
   import { onMount, type Snippet } from 'svelte';
   import { t } from 'svelte-i18n';
   import { get } from 'svelte/store';
@@ -72,6 +74,47 @@
       toast_danger_title: $t('error'),
       save: $t('save'),
       supporter: $t('supporter'),
+    });
+
+    addTranslation($lang, {
+      ...En,
+      'Enter fullscreen mode': $t('media_chrome.enter_fullscreen_mode'),
+      'Exit fullscreen mode': $t('media_chrome.exit_fullscreen_mode'),
+      Mute: $t('media_chrome.mute'),
+      Unmute: $t('media_chrome.unmute'),
+      Play: $t('play'),
+      Pause: $t('pause'),
+      'Playback rate': $t('media_chrome.playback_rate'),
+      'Playback rate {playbackRate}': $t('media_chrome.playback_rate_value'),
+      Settings: $t('settings'),
+      volume: $t('media_chrome.volume'),
+      'current playback rate': $t('media_chrome.playback_rate_current'),
+      'playback time': $t('media_chrome.playback_time'),
+      settings: $t('settings'),
+      play: $t('play'),
+      pause: $t('pause'),
+      mute: $t('media_chrome.mute'),
+      unmute: $t('media_chrome.unmute'),
+      'enter fullscreen mode': $t('media_chrome.enter_fullscreen_mode'),
+      'exit fullscreen mode': $t('media_chrome.exit_fullscreen_mode'),
+
+      'Network Error': $t('media_chrome.network_error'),
+      'Decode Error': $t('media_chrome.decode_error'),
+      'Source Not Supported': $t('media_chrome.not_supported_error'),
+      'A network error caused the media download to fail.': $t('media_chrome.network_error_description'),
+      'A media error caused playback to be aborted. The media could be corrupt or your browser does not support this format.':
+        $t('media_chrome.media_error_description'),
+      'An unsupported error occurred. The server or network failed, or your browser does not support this format.': $t(
+        'media_chrome.not_supported_error_description',
+      ),
+      hour: $t('hour'),
+      hours: $t('hours'),
+      minute: $t('minute'),
+      minutes: $t('minutes'),
+      second: $t('media_chrome.second'),
+      seconds: $t('media_chrome.seconds'),
+      '{time} remaining': $t('media_chrome.time_value_remaining'),
+      '{currentTime} of {totalTime}': $t('media_chrome.time_value_of_total_time'),
     });
   });
 
