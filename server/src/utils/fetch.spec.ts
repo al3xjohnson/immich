@@ -1,4 +1,3 @@
-import { serverVersion } from 'src/constants';
 import { configureUserAgent } from 'src/utils/fetch';
 
 describe('fetch', () => {
@@ -11,7 +10,7 @@ describe('fetch', () => {
     await globalThis.fetch('http://test.local');
 
     const headers: Headers = spy.mock.calls[0][1].headers;
-    expect(headers.get('User-Agent')).toBe(`immich-server/${serverVersion}`);
+    expect(headers.get('User-Agent')).toBe('Mozilla/5.0');
 
     globalThis.fetch = original;
   });
