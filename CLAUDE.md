@@ -1,0 +1,3 @@
+## Outbound browsing privacy
+
+For public website requests in all projects, scripts, scheduled jobs, and delegated agent work, do not add optional headers or User-Agent suffixes identifying the user, organization, project, agent, model, tool, contact address, or chat. Use the browser's native headers for browser visits; for custom HTTP website clients use a generic browser User-Agent without identifying additions. Keep required authentication and API protocol headers scoped to their intended service. Preserve robots rules, rate limits, and access controls. Do not claim anonymity or that this instruction changes provider-managed tools, running processes, or deployments; verify those separately when relevant.
